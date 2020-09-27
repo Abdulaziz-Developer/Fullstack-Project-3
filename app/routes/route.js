@@ -1,20 +1,122 @@
 // في هذا الملف ، قم بإعداد طرق التطبيق الخاصة بك | in this file, set up your application routes
-
+const Joi = require("@hapi/joi");
+const jwt = require("jsonwebtoken");
 // 1. استيراد وحدةالمدرس | import the teacher module
-
+const teacherModel = require("../models/Teacher");
+const hashPassword = require("../Hash");
 // 2. استيراد وحدة الطالب | import the student module
+const studentModel = require("../models/Student");
+const { func } = require("@hapi/joi");
 
-// 3. تسجيل مدرس جديد و تخزين بياناته | new teacher sign up
+// Routes
+const setupRoutes = function (app) {
+  app.get("/index.html", function (req, res) {
+    res.sendFile(__dirname + "/index.html");
+  });
 
-// 4. تسجيل دخول مدرس و ارجاع التوكن | teacher login and response with jwt token
+  // 3. تسجيل مدرس جديد و تخزين بياناته | new teacher sign up
+  app.post("/teacher/register", async function (req, res) {
+    const { name, email, password, birthdate } = req.body;
+    const InfoSchema = Joi.object({
+      name: Joi.string().required(),
+      email: Joi.string().email().required(),
+      password: Joi.string().min(8).required(),
+      birthdate: Joi.string().required(),
+    });
+    const validationResult = InfoSchema.validate(req.body);
+    if (validationResult.error) {
+      res.statusCode = 400;
+      res.send(validationResult.error.details[0].message);
 
-// 5. إعداد طرق مختلفة | setup the different routes (get, post, put, delete)
+      return;
+    }
+    try {
+      const newTeacher = new teacherModel({
+        name,
+        email,
+        password,
+        birthdate,
+      });
+      await newTeacher.save();
+      res.send(newTeacher);
+    } catch (error) {
+      res.statusCode = 400;
+      res.send(error.message);
+    }
+  });
 
+  app.post("/student/register", async function (req, res) {
+    const { name, email, birthdate, city } = req.body;
+    const InfoSchema = Joi.object({
+      name: Joi.string().required(),
+      email: Joi.string().email().required(),
+      city: Joi.string().required(),
+      birthdate: Joi.string().required(),
+    });
+    const validationResult = InfoSchema.validate(req.body);
+    if (validationResult.error) {
+      res.statusCode = 400;
+      res.send(validationResult.error.details[0].message);
+      return;
+    }
+    try {
+      const newStudent = new studentModel({
+        name,
+        birthdate,
+        city,
+        email,
+      });
+      await newStudent.save();
+      res.send(newStudent);
+    } catch (error) {
+      res.statusCode = 400;
+      res.send(error.message);
+    }
+  });
 
+  // 4. تسجيل دخول مدرس و ارجاع التوكن | teacher login and response with jwt token
+  app.post("/teacher/login", async function (req, res) {
+    const { email, password } = req.body;
 
+    const teacher = await teacherModel.findOne({ email });
 
+    if (!teacher) {
+      res.statusCode = 401;
+      res.send("Teacher not found!");
+    } else {
+      if (teacher.password === hashPassword(password, teacher.salt)) {
+        const token = jwt.sign({ sub: teacher._id }, teacher.salt, {
+          expiresIn: 30,
+        });
+        res.send(`Welcome Back Teacher ${teacher.name} ` + token);
+      } else {
+        res.statusCode = 403;
+        res.send("Password is Wrong !");
+      }
+    }
+  });
+  // 5. إعداد طرق مختلفة | setup the different routes (get, post, put, delete)
+  app.put("/student/id:id", async function (req, res) {
+    const { id } = req.params;
 
+    const student = await studentModel.findById(id);
 
-
-
+    if (!student) {
+      res.statusCode = 400;
+      res.send("Student not Found!");
+    } else {
+      const { name, email, birthdate, city } = req.body;
+      if (email) {
+        //student.name = name;
+        student.email = email;
+        //student.city = city;
+        //student.birthdate = birthdate;
+        student.save();
+      }
+      res.send(student);
+    }
+  });
+};
+// Routes
 // 3. تصدير الوحدة | export the module
+module.exports = setupRoutes;
