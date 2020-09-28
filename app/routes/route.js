@@ -6,12 +6,48 @@ const teacherModel = require("../models/Teacher");
 const hashPassword = require("../Hash");
 // 2. استيراد وحدة الطالب | import the student module
 const studentModel = require("../models/Student");
-const { func } = require("@hapi/joi");
 
 // Routes
 const setupRoutes = function (app) {
   app.get("/index.html", function (req, res) {
     res.sendFile(__dirname + "/index.html");
+  });
+
+  app.get("/teacher/students", async function (req, res) {
+    let conditions = {};
+    try {
+      const thetoken = req.headers.authorization;
+
+      if (!thetoken) {
+        res.statusCode = 401;
+        res.send("You have no permissions!");
+        return;
+      }
+
+      const decodedToken = jwt.decode(thetoken);
+
+      console.log(decodedToken);
+
+      const theTeacher = await teacherModel.findById(decodedToken.sub);
+
+      if (!theTeacher) {
+        res.statusCode = 401;
+        res.send("You have no permissions !");
+        return;
+      }
+
+      jwt.verify(thetoken, theTeacher.salt);
+
+      if (req.query.name) {
+        conditions.name = { $in: [req.query.name] };
+      }
+      const students = await studentModel.find(conditions);
+
+      res.send(students);
+    } catch (error) {
+      res.statusCode = 401;
+      res.send(error.message);
+    }
   });
 
   // 3. تسجيل مدرس جديد و تخزين بياناته | new teacher sign up
@@ -85,10 +121,10 @@ const setupRoutes = function (app) {
       res.send("Teacher not found!");
     } else {
       if (teacher.password === hashPassword(password, teacher.salt)) {
-        const token = jwt.sign({ sub: teacher._id }, teacher.salt, {
+        const token = jwt.sign({ sub: teacher._id }, "" + teacher.salt, {
           expiresIn: 30,
         });
-        res.send(`Welcome Back Teacher ${teacher.name} ` + token);
+        res.send(token);
       } else {
         res.statusCode = 403;
         res.send("Password is Wrong !");
@@ -96,24 +132,13 @@ const setupRoutes = function (app) {
     }
   });
   // 5. إعداد طرق مختلفة | setup the different routes (get, post, put, delete)
-  app.put("/student/id:id", async function (req, res) {
+  app.delete("/student/id:id", async function (req, res) {
     const { id } = req.params;
-
-    const student = await studentModel.findById(id);
-
-    if (!student) {
-      res.statusCode = 400;
-      res.send("Student not Found!");
-    } else {
-      const { name, email, birthdate, city } = req.body;
-      if (email) {
-        //student.name = name;
-        student.email = email;
-        //student.city = city;
-        //student.birthdate = birthdate;
-        student.save();
-      }
+    try {
+      const student = await studentModel.deleteOne({ _id: id });
       res.send(student);
+    } catch (error) {
+      res.send(error.message);
     }
   });
 };
