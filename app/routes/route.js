@@ -1,9 +1,10 @@
 // في هذا الملف ، قم بإعداد طرق التطبيق الخاصة بك | in this file, set up your application routes
 const Joi = require("@hapi/joi");
 const jwt = require("jsonwebtoken");
+const bodyParser = require("body-parser");
 // 1. استيراد وحدةالمدرس | import the teacher module
 const teacherModel = require("../models/Teacher");
-const hashPassword = require("../Hash");
+const hashPassword = require("../Helper/Hash");
 // 2. استيراد وحدة الطالب | import the student module
 const studentModel = require("../models/Student");
 
@@ -52,7 +53,13 @@ const setupRoutes = function (app) {
 
   // 3. تسجيل مدرس جديد و تخزين بياناته | new teacher sign up
   app.post("/teacher/register", async function (req, res) {
+    // const name = req.body.myname;
+    // const email = req.body.email2;
+    // const password = req.body.password2;
+    // const birthdate = req.body.thedate;
+
     const { name, email, password, birthdate } = req.body;
+
     const InfoSchema = Joi.object({
       name: Joi.string().required(),
       email: Joi.string().email().required(),

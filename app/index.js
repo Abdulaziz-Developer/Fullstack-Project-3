@@ -1,3 +1,4 @@
+require("dotenv").config();
 //  استيراد المكتبات المطلوبة | import the required libraries
 const express = require("express");
 const mongoose = require("mongoose");
@@ -7,7 +8,7 @@ const bodyParser = require("body-parser");
 const start = async function () {
   try {
     await mongoose
-      .connect("mongodb://localhost/SchoolSystem", {
+      .connect(process.env.DB_URL, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         useFindAndModify: false,
@@ -20,7 +21,7 @@ const start = async function () {
         console.log("Let us Create a Routes");
         setupRoutes(app);
         console.log("Server Started on port 3000");
-        app.listen(3000);
+        app.listen(process.env.SERVER_PORT);
       });
   } catch (error) {
     console.error(error);

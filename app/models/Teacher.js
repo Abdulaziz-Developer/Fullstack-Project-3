@@ -2,7 +2,7 @@
 
 // 1. قم باستيراد مكتبة moongoose | import the mongoose library
 const { Schema, model } = require("mongoose");
-const hashPassword = require("../Hash");
+const hashPassword = require("../Helper/Hash");
 const shortId = require("shortid");
 // 2. قم بتحديد مخطط المدرس | start defining your user schema
 const teacherSchema = new Schema({

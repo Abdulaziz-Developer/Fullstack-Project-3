@@ -8,9 +8,11 @@
       body {
         height: 98vh;
         display: flex;
-        justify-content: center;
+        justify-content: space-evenly;
         background: url("https://cdn.hipwallpaper.com/i/41/65/SUwO3a.png")
           no-repeat center;
+        flex-direction: column;
+        align-items: center;
       }
       p {
         font-size: 35px;
@@ -20,11 +22,34 @@
       p::selection {
         color: green;
       }
+      form {
+        background-color: #f2f2f2;
+        padding: 15px;
+      }
     </style>
   </head>
   <body>
     <div>
       <p>Welcome To School System By : Abdulaziz AlQattaN</p>
     </div>
+    <form action="/teacher/login" method="POST">
+      <span><h2>Put Your Email</h2></span>
+      <input type="email" name="email" />
+      <span><h2>Put Your Password</h2></span>
+      <input type="password" name="password" />
+      <button>Login</button>
+    </form>
+    <!--------------------------------------------------------->
+    <form action="/teacher/register" method="POST">
+      <span><h2>Put Your Name</h2></span>
+      <input type="text" name="myname" />
+      <span><h2>Put Your Email</h2></span>
+      <input type="email" name="email2" />
+      <span><h2>Put Your Password</h2></span>
+      <input type="password" name="password2" />
+      <span><h2>Put Your Birthdate</h2></span>
+      <input type="date" name="thedate" />
+      <button>Login</button>
+    </form>
   </body>
 </html>
